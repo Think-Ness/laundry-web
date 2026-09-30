@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/actions'
+import StaffScannerModal from './StaffScannerModal'
 
 interface SidebarClientProps {
   userEmail: string
@@ -102,7 +103,16 @@ function UserIcon() {
   )
 }
 
-function SidebarContent({ userEmail, onLinkClick }: { userEmail: string; onLinkClick?: () => void }) {
+function ScannerIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" />
+      <rect x="7" y="7" width="10" height="10" rx="1" />
+    </svg>
+  )
+}
+
+function SidebarContent({ userEmail, onLinkClick, onOpenScanner }: { userEmail: string; onLinkClick?: () => void; onOpenScanner?: () => void }) {
   const pathname = usePathname()
 
   const isActive = (href: string) => {
@@ -142,6 +152,54 @@ function SidebarContent({ userEmail, onLinkClick }: { userEmail: string; onLinkC
 
       {/* Navigation */}
       <nav style={{ flex: 1, padding: '14px 10px', overflowY: 'auto' }}>
+        {/* Quick Scan Button (S) */}
+        {onOpenScanner && (
+          <button
+            type="button"
+            onClick={onOpenScanner}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 12px',
+              borderRadius: '9px',
+              border: '1.5px dashed rgba(59,130,246,0.5)',
+              background: 'rgba(37,99,235,0.15)',
+              color: '#93C5FD',
+              cursor: 'pointer',
+              marginBottom: '14px',
+              fontSize: '13px',
+              fontWeight: 700,
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(37,99,235,0.25)'
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(37,99,235,0.15)'
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ScannerIcon />
+              Scan Masuk
+            </span>
+            <kbd
+              style={{
+                background: '#2563EB',
+                color: '#fff',
+                fontSize: '11px',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontFamily: 'monospace',
+                fontWeight: 700,
+              }}
+            >
+              S
+            </kbd>
+          </button>
+        )}
+
         <div style={{ fontSize: '10px', color: '#475569', fontWeight: 600, letterSpacing: '0.08em', padding: '0 8px', marginBottom: '6px' }}>
           MENU UTAMA
         </div>
@@ -243,6 +301,32 @@ function SidebarContent({ userEmail, onLinkClick }: { userEmail: string; onLinkC
 
 export default function SidebarClient({ userEmail }: SidebarClientProps) {
   const [open, setOpen] = useState(false)
+  const [isScannerOpen, setIsScannerOpen] = useState(false)
+
+  // Global Keyboard Shortcut: Press 'S' to open scanner, 'Escape' to close
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const active = document.activeElement as HTMLElement | null
+      const isTyping = active && (
+        active.tagName === 'INPUT' ||
+        active.tagName === 'TEXTAREA' ||
+        active.isContentEditable
+      )
+
+      if (e.key === 'Escape' && isScannerOpen) {
+        setIsScannerOpen(false)
+        return
+      }
+
+      if ((e.key === 's' || e.key === 'S') && !isTyping && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        e.preventDefault()
+        setIsScannerOpen(true)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isScannerOpen])
 
   return (
     <>
@@ -258,7 +342,10 @@ export default function SidebarClient({ userEmail }: SidebarClientProps) {
         zIndex: 50,
         borderRight: '1px solid rgba(255,255,255,0.05)',
       }} className="sidebar-desktop">
-        <SidebarContent userEmail={userEmail} />
+        <SidebarContent
+          userEmail={userEmail}
+          onOpenScanner={() => setIsScannerOpen(true)}
+        />
       </aside>
 
       {/* Mobile Top Bar */}
@@ -286,19 +373,42 @@ export default function SidebarClient({ userEmail }: SidebarClientProps) {
           </div>
           <span style={{ fontWeight: 700, color: '#F1F5F9', fontSize: '14px' }}>Latansa Laundry</span>
         </div>
-        <button
-          onClick={() => setOpen(!open)}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#94A3B8',
-            cursor: 'pointer',
-            padding: '4px',
-            display: 'flex', alignItems: 'center',
-          }}
-        >
-          {open ? <CloseIcon /> : <HamburgerIcon />}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            type="button"
+            onClick={() => setIsScannerOpen(true)}
+            style={{
+              background: 'rgba(37,99,235,0.2)',
+              border: '1px solid rgba(59,130,246,0.4)',
+              color: '#93C5FD',
+              borderRadius: '7px',
+              padding: '6px 10px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '12px',
+              fontWeight: 600,
+            }}
+          >
+            <ScannerIcon />
+            <span>Scan (S)</span>
+          </button>
+          <button
+            onClick={() => setOpen(!open)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#94A3B8',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            {open ? <CloseIcon /> : <HamburgerIcon />}
+          </button>
+        </div>
       </header>
 
       {/* Mobile Sidebar Overlay */}
@@ -327,9 +437,28 @@ export default function SidebarClient({ userEmail }: SidebarClientProps) {
         borderRight: '1px solid rgba(255,255,255,0.05)',
       }} className="mobile-sidebar">
         <div style={{ paddingTop: '8px' }}>
-          <SidebarContent userEmail={userEmail} onLinkClick={() => setOpen(false)} />
+          <SidebarContent
+            userEmail={userEmail}
+            onLinkClick={() => setOpen(false)}
+            onOpenScanner={() => {
+              setOpen(false)
+              setIsScannerOpen(true)
+            }}
+          />
         </div>
       </aside>
+
+      {/* Global Staff Scanner Modal */}
+      <StaffScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onSuccessScan={() => {
+          // If on dashboard or pesanan page, can trigger page refresh
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('order-scanned'))
+          }
+        }}
+      />
     </>
   )
 }
