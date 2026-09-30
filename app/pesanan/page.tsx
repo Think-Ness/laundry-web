@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, type Order, type OrderStatus } from '@/types'
 
 export const metadata: Metadata = {
-  title: 'Daftar Pesanan — Latansa Laundry',
+  title: 'Kelola Pesanan — Latansa Laundry',
 }
 
 export default async function PesananListPage({
@@ -43,51 +43,101 @@ export default async function PesananListPage({
   ]
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Kelola Pesanan Laundry</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Daftar semua transaksi dan antrian cuci santri</p>
-        </div>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 className="page-title">Kelola Pesanan</h1>
+        <p className="page-subtitle">Daftar semua transaksi laundry santri</p>
       </div>
 
+      {/* Result count */}
+      {orders && (
+        <div style={{ marginBottom: '14px', fontSize: '13px', color: '#64748B' }}>
+          Menampilkan <strong style={{ color: '#0F172A' }}>{orders.length}</strong> pesanan
+          {(q || (status && status !== 'all')) && (
+            <> — <Link href="/pesanan" style={{ color: '#2563EB', fontWeight: 600, textDecoration: 'none' }}>Lihat semua</Link></>
+          )}
+        </div>
+      )}
+
       {/* Filter & Search Bar */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 shadow-sm">
-        <form method="GET" className="flex flex-col md:flex-row gap-3">
-          <div className="flex-1">
+      <div style={{
+        background: '#fff',
+        border: '1px solid #E2E8F0',
+        borderRadius: '14px',
+        padding: '16px',
+        marginBottom: '20px',
+      }}>
+        <form method="GET" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 220px' }}>
             <input
               type="text"
               name="q"
               defaultValue={q || ''}
               placeholder="Cari No. Transaksi, NIS, atau Nama Santri..."
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{
+                width: '100%',
+                padding: '9px 14px',
+                border: '1px solid #E2E8F0',
+                borderRadius: '10px',
+                fontSize: '13px',
+                color: '#0F172A',
+                background: '#F8FAFC',
+                outline: 'none',
+              }}
             />
           </div>
-          <div className="w-full md:w-48">
+          <div style={{ flex: '0 1 160px' }}>
             <select
               name="status"
               defaultValue={status || 'all'}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{
+                width: '100%',
+                padding: '9px 12px',
+                border: '1px solid #E2E8F0',
+                borderRadius: '10px',
+                fontSize: '13px',
+                color: '#374151',
+                background: '#F8FAFC',
+                outline: 'none',
+              }}
             >
               {statusOptions.map((opt) => (
-                <option key={opt.key} value={opt.key}>
-                  {opt.label}
-                </option>
+                <option key={opt.key} value={opt.key}>{opt.label}</option>
               ))}
             </select>
           </div>
-          <div className="flex gap-2">
+          <div style={{ display: 'flex', gap: '8px', flex: '0 0 auto' }}>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition-colors"
+              style={{
+                padding: '9px 18px',
+                background: '#2563EB',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
             >
-              Cari
+              Filter
             </button>
             {(q || (status && status !== 'all')) && (
               <Link
                 href="/pesanan"
-                className="px-3 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium rounded-lg flex items-center"
+                style={{
+                  display: 'inline-flex', alignItems: 'center',
+                  padding: '9px 14px',
+                  background: '#F1F5F9',
+                  color: '#64748B',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
               >
                 Reset
               </Link>
@@ -97,70 +147,102 @@ export default async function PesananListPage({
       </div>
 
       {/* Orders Table */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500 uppercase font-semibold">
-              <tr>
-                <th className="px-4 py-3">No. Transaksi</th>
-                <th className="px-4 py-3">Santri & NIS</th>
-                <th className="px-4 py-3">Wali Santri</th>
-                <th className="px-4 py-3">Layanan</th>
-                <th className="px-4 py-3">Berat</th>
-                <th className="px-4 py-3">Total</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Aksi</th>
+      <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: '16px', overflow: 'hidden' }}>
+        <div className="table-responsive">
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #F1F5F9' }}>
+                {['No. Transaksi', 'Santri & NIS', 'Wali Santri', 'Layanan', 'Berat', 'Total', 'Status', ''].map(h => (
+                  <th key={h} style={{
+                    padding: '11px 16px',
+                    textAlign: 'left',
+                    fontWeight: 600,
+                    fontSize: '11px',
+                    color: '#64748B',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {orders?.map((order: Order) => (
-                <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs font-semibold text-blue-700">
+                <tr key={order.id} style={{ borderBottom: '1px solid #F8FAFC' }}>
+                  <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '11px', color: '#2563EB', fontWeight: 600, whiteSpace: 'nowrap' }}>
                     {order.transaction_id}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-gray-800">{order.student_name}</div>
+                  <td style={{ padding: '12px 16px' }}>
+                    <div style={{ fontWeight: 600, color: '#0F172A' }}>{order.student_name}</div>
                     {order.student_reg_number && (
-                      <span className="text-[11px] font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                      <span style={{
+                        fontFamily: 'monospace', fontSize: '10px',
+                        background: '#F1F5F9', color: '#64748B',
+                        padding: '1px 6px', borderRadius: '4px', marginTop: '2px',
+                        display: 'inline-block',
+                      }}>
                         NIS: {order.student_reg_number}
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-700 text-xs">
+                  <td style={{ padding: '12px 16px', color: '#475569', fontSize: '12px' }} className="hide-mobile">
                     <div>{order.customer_name}</div>
                     {order.customer_phone && (
-                      <span className="text-gray-400">{order.customer_phone}</span>
+                      <div style={{ color: '#94A3B8', fontSize: '11px' }}>{order.customer_phone}</div>
                     )}
                   </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-block text-xs uppercase font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
-                      {order.service_type || 'Biasa'}
+                  <td style={{ padding: '12px 16px' }} className="hide-mobile">
+                    <span style={{
+                      background: '#EFF6FF', color: '#2563EB',
+                      padding: '2px 8px', borderRadius: '6px',
+                      fontSize: '11px', fontWeight: 600, textTransform: 'uppercase',
+                    }}>
+                      {order.service_type || 'Reguler'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-700 font-medium">
-                    {Number(order.weight).toFixed(1)} Kg
+                  <td style={{ padding: '12px 16px', color: '#475569', fontWeight: 500 }} className="hide-mobile">
+                    {Number(order.weight).toFixed(1)} kg
                   </td>
-                  <td className="px-4 py-3 font-bold text-gray-900">
+                  <td style={{ padding: '12px 16px', fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap' }}>
                     Rp {Number(order.total_amount).toLocaleString('id-ID')}
                   </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={order.status} />
+                  <td style={{ padding: '12px 16px' }}>
+                    <StatusBadge status={order.status as OrderStatus} />
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                     <Link
                       href={`/pesanan/${order.id}`}
-                      className="inline-block px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium text-xs rounded transition-colors"
+                      style={{
+                        display: 'inline-block',
+                        background: '#EFF6FF',
+                        color: '#2563EB',
+                        padding: '5px 12px',
+                        borderRadius: '8px',
+                        fontSize: '11.5px',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        whiteSpace: 'nowrap',
+                      }}
                     >
                       Detail →
                     </Link>
                   </td>
                 </tr>
               ))}
-
               {(!orders || orders.length === 0) && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400 text-sm">
-                    Belum ada pesanan yang sesuai filter.
+                  <td colSpan={8} style={{ padding: '56px 16px', textAlign: 'center', color: '#94A3B8' }}>
+                    <div style={{ marginBottom: '10px', opacity: 0.35 }}>
+                      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto' }}>
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      </svg>
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: '#64748B', marginBottom: '4px' }}>Tidak ada pesanan ditemukan</div>
+                    <div style={{ fontSize: '12px' }}>
+                      {q ? `Tidak ada hasil untuk "${q}"` : 'Belum ada pesanan yang masuk'}
+                    </div>
                   </td>
                 </tr>
               )}
@@ -174,17 +256,27 @@ export default async function PesananListPage({
 
 function StatusBadge({ status }: { status: OrderStatus }) {
   const label = ORDER_STATUS_LABELS[status] ?? status
-  const colorMap: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-700 border border-blue-200',
-    indigo: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
-    orange: 'bg-orange-50 text-orange-700 border border-orange-200',
-    green: 'bg-green-50 text-green-700 border border-green-200',
-    red: 'bg-red-50 text-red-700 border border-red-200',
-    gray: 'bg-gray-100 text-gray-600 border border-gray-200',
+  const colorMap: Record<string, { bg: string; color: string }> = {
+    blue:   { bg: '#EFF6FF', color: '#2563EB' },
+    indigo: { bg: '#EEF2FF', color: '#4F46E5' },
+    orange: { bg: '#FFF7ED', color: '#C2410C' },
+    green:  { bg: '#F0FDF4', color: '#16A34A' },
+    red:    { bg: '#FEF2F2', color: '#DC2626' },
+    gray:   { bg: '#F8FAFC', color: '#64748B' },
   }
   const color = ORDER_STATUS_COLORS[status] ?? 'gray'
+  const { bg, color: textColor } = colorMap[color] ?? colorMap.gray
   return (
-    <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full ${colorMap[color]}`}>
+    <span style={{
+      display: 'inline-block',
+      background: bg,
+      color: textColor,
+      padding: '3px 10px',
+      borderRadius: '999px',
+      fontSize: '11px',
+      fontWeight: 600,
+      whiteSpace: 'nowrap',
+    }}>
       {label}
     </span>
   )

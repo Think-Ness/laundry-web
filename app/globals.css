@@ -1,17 +1,20 @@
 /* ============================================================
-   LaundrySantri Online — Global CSS
-   Design: Inter, #2563EB primary, mobile-first
+   Latansa Laundry Online — Global CSS
+   Design: Inter, #2563EB primary, mobile-first, premium dark sidebar
    ============================================================ */
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
   --primary:       #2563EB;
   --primary-hover: #1D4ED8;
   --primary-light: #DBEAFE;
+  --sidebar-bg:    #0D1929;
+  --sidebar-w:     240px;
   --dark:          #0F172A;
   --gray:          #64748B;
   --border:        #E2E8F0;
-  --bg:            #F8FAFC;
+  --bg:            #F1F5F9;
   --white:         #FFFFFF;
   --green:         #16A34A;
   --green-bg:      #DCFCE7;
@@ -20,10 +23,11 @@
   --red:           #DC2626;
   --red-bg:        #FEE2E2;
   --blue-bg:       #DBEAFE;
+  --mobile-header: 56px;
 }
 
 * { box-sizing: border-box; }
-html { font-size: 16px; }
+html { font-size: 16px; scroll-behavior: smooth; }
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--bg);
@@ -31,32 +35,160 @@ body {
   margin: 0;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Sidebar layout (dashboard) */
-.dashboard-layout {
-  display: flex;
+/* ── Sidebar-based Dashboard Layout ── */
+.sidebar-desktop {
+  display: flex !important;
+}
+.mobile-header {
+  display: none !important;
+}
+.mobile-sidebar {
+  display: none !important;
+}
+
+.dashboard-main {
+  margin-left: var(--sidebar-w);
   min-height: 100vh;
-}
-.sidebar {
-  width: 220px;
-  background: var(--dark);
-  color: #CBD5E1;
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  overflow-y: auto;
-  z-index: 50;
-}
-.main-content {
-  margin-left: 220px;
-  flex: 1;
-  padding: 28px 32px;
+  padding: 32px 36px;
+  background: var(--bg);
 }
 
-/* Mobile */
+/* ── Responsive Breakpoints ── */
+@media (max-width: 1024px) {
+  .dashboard-main {
+    padding: 24px 24px;
+  }
+}
+
 @media (max-width: 768px) {
-  .sidebar { display: none; }
-  .main-content { margin-left: 0; padding: 16px; }
+  .sidebar-desktop {
+    display: none !important;
+  }
+  .mobile-header {
+    display: flex !important;
+  }
+  .mobile-sidebar {
+    display: flex !important;
+  }
+  .dashboard-main {
+    margin-left: 0;
+    padding: calc(var(--mobile-header) + 20px) 16px 24px;
+  }
+}
+
+/* ── Scrollbar Styling ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ── Table Responsive ── */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Card Styles ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.card-sm {
+  border-radius: 12px;
+}
+
+/* ── Stat Card ── */
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+}
+
+/* ── Form Inputs ── */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* ── Button Base ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+  border: none;
+}
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  padding: 9px 18px;
+  font-size: 13.5px;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+/* ── Status Badge ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ── Utility: Page Heading ── */
+.page-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--dark);
+  letter-spacing: -0.02em;
+}
+.page-subtitle {
+  font-size: 13px;
+  color: var(--gray);
+  margin-top: 2px;
+}
+
+/* ── Responsive Stat Grid ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+@media (max-width: 1024px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+/* ── Mobile Table Card Style ── */
+@media (max-width: 640px) {
+  .hide-mobile { display: none !important; }
+  .mobile-stack td { display: block; }
 }
