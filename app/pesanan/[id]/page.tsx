@@ -122,13 +122,11 @@ export default async function OrderDetailPage({ params }: Props) {
         {/* Timeline + Actions */}
         <div className="space-y-5">
           {/* Actions */}
-          {nextStatuses.length > 0 && (
-            <OrderActions
-              orderId={order.id}
-              currentStatus={order.status as OrderStatus}
-              nextStatuses={nextStatuses}
-            />
-          )}
+          <OrderActions
+            orderId={order.id}
+            currentStatus={order.status as OrderStatus}
+            nextStatuses={nextStatuses}
+          />
 
           {/* Timeline */}
           <div className="bg-white border border-gray-200 rounded-xl p-5">

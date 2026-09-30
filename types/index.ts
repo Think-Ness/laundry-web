@@ -76,7 +76,7 @@ export const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   waiting_confirmation: ['new'],
   new: ['received', 'cancelled'],
   received: ['processing', 'cancelled'],
-  processing: ['ready'],
+  processing: ['ready', 'completed'],
   ready: ['completed'],
   completed: [],
   cancelled: [],

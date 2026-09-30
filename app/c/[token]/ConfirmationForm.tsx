@@ -225,12 +225,59 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
             </div>
           </div>
 
+          {/* Banner ready / completed */}
+          {currentStatus === 'ready' && (
+            <div style={{
+              background: '#EFF6FF',
+              border: '1px solid #BFDBFE',
+              borderRadius: '10px',
+              padding: '10px 14px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              <span style={{ fontSize: '18px' }}>🎉</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#1E40AF' }}>
+                  Cucian Selesai & Siap Diambil!
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#1E3A8A', marginTop: '2px' }}>
+                  Pakaian telah selesai dicuci dan disetrika rapi. Silakan ambil di counter laundry pondok.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isCompleted && (
+            <div style={{
+              background: '#DCFCE7',
+              border: '1px solid #BBF7D0',
+              borderRadius: '10px',
+              padding: '10px 14px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              <span style={{ fontSize: '18px' }}>✅</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#15803D' }}>
+                  Pesanan Telah Selesai
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#166534', marginTop: '2px' }}>
+                  Pakaian telah diserahkan kembali kepada santri / wali. Terima kasih!
+                </div>
+              </div>
+            </div>
+          )}
+
           {!isCancelled ? (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {STATUS_STEPS.map((step, i) => {
-                const done = i < currentStepIndex
-                const active = i === currentStepIndex
-                const pending = i > currentStepIndex
+                const done = isCompleted ? true : i < currentStepIndex
+                const active = !isCompleted && i === currentStepIndex
+                const pending = !isCompleted && i > currentStepIndex
                 const isLast = i === STATUS_STEPS.length - 1
 
                 return (
@@ -280,17 +327,20 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
                         {step.label}
                       </div>
                       <div style={{ fontSize: '11.5px', color: pending ? '#94A3B8' : '#475569', marginTop: '2px', lineHeight: 1.4 }}>
-                        {step.desc}
+                        {step.key === 'completed' && currentStatus === 'ready'
+                          ? 'Tinggal serah terima saat santri datang mengambil pakaian'
+                          : step.desc}
                       </div>
                       {active && (
                         <div style={{
                           display: 'inline-flex', alignItems: 'center', gap: '4px',
-                          background: '#EFF6FF', color: '#1D4ED8',
-                          border: '1px solid #DBEAFE',
+                          background: step.key === 'ready' ? '#DCFCE7' : '#EFF6FF',
+                          color: step.key === 'ready' ? '#15803D' : '#1D4ED8',
+                          border: step.key === 'ready' ? '1px solid #BBF7D0' : '1px solid #DBEAFE',
                           borderRadius: '6px', fontSize: '10.5px', fontWeight: 600,
                           padding: '2px 8px', marginTop: '5px',
                         }}>
-                          Sedang Berlangsung
+                          {step.key === 'ready' ? 'Bisa Diambil Sekarang' : 'Sedang Berlangsung'}
                         </div>
                       )}
                     </div>
