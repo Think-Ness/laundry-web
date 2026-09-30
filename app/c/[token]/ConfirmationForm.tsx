@@ -27,8 +27,8 @@ type State = 'idle' | 'loading' | 'success' | 'already_submitted' | 'error'
 
 const STATUS_STEPS = [
   { key: 'new', label: 'Pesanan Diterima', desc: 'Order terdaftar di stand laundry' },
-  { key: 'received', label: 'Diterima Laundry', desc: 'Pakaian telah diterima petugas laundry' },
-  { key: 'processing', label: 'Sedang Dicuci', desc: 'Pakaian sedang dicuci & dikeringkan' },
+  { key: 'received', label: 'Diterima Laundry', desc: 'Pakaian fisik telah diterima petugas laundry' },
+  { key: 'processing', label: 'Sedang Dicuci', desc: 'Pakaian dalam proses pencucian & pengeringan' },
   { key: 'ready', label: 'Siap Diambil', desc: 'Selesai disetrika, rapi & siap diambil' },
   { key: 'completed', label: 'Selesai', desc: 'Laundry telah diserahkan kembali' },
 ]
@@ -111,12 +111,12 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
   if (isSubmitted) {
     return (
       <div style={{ width: '100%' }}>
-        {/* Success / Status Banner */}
+        {/* Status Alert Banner */}
         <div style={{
-          background: state === 'success' ? 'rgba(34,197,94,0.12)' : 'rgba(59,130,246,0.12)',
-          border: state === 'success' ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(59,130,246,0.3)',
-          borderRadius: '14px',
-          padding: '14px 16px',
+          background: state === 'success' ? '#DCFCE7' : '#EFF6FF',
+          border: state === 'success' ? '1px solid #BBF7D0' : '1px solid #DBEAFE',
+          borderRadius: '12px',
+          padding: '12px 16px',
           marginBottom: '16px',
           display: 'flex',
           alignItems: 'center',
@@ -125,14 +125,14 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '32px', height: '32px',
+              width: '28px', height: '28px',
               borderRadius: '8px',
               background: state === 'success' ? '#16A34A' : '#2563EB',
-              color: '#fff',
+              color: '#FFFFFF',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
             }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
@@ -140,12 +140,12 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
               <div style={{
                 fontSize: '13px',
                 fontWeight: 700,
-                color: state === 'success' ? '#4ADE80' : '#93C5FD',
+                color: state === 'success' ? '#15803D' : '#1E40AF',
               }}>
                 {state === 'success' ? 'Laundry Berhasil Dikirim!' : 'Pesanan Sudah Dikonfirmasi'}
               </div>
-              <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>
-                Status cucian dapat dipantau langsung di bawah ini
+              <div style={{ fontSize: '11px', color: '#64748B', marginTop: '1px' }}>
+                Status cucian dipantau langsung di bawah ini
               </div>
             </div>
           </div>
@@ -154,18 +154,18 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
             onClick={handleRefresh}
             title="Muat ulang status terbaru"
             style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.12)',
+              background: '#FFFFFF',
+              border: '1px solid #CBD5E1',
               borderRadius: '8px',
-              padding: '6px 10px',
-              color: '#CBD5E1',
+              padding: '6px 12px',
+              color: '#334155',
               fontSize: '11.5px',
               fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '5px',
-              transition: 'all 0.15s ease',
+              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
             }}
           >
             <svg
@@ -186,42 +186,42 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
 
         {/* Progress Stepper Card */}
         <div style={{
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '16px',
+          background: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          borderRadius: '14px',
           padding: '20px',
           marginBottom: '16px',
+          boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.04)',
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             marginBottom: '18px',
-            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            borderBottom: '1px solid #F1F5F9',
             paddingBottom: '12px',
           }}>
             <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', letterSpacing: '0.06em' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em' }}>
                 PROGRES PENGERJAAN
               </div>
-              <div style={{ fontSize: '12px', color: '#CBD5E1', marginTop: '2px', fontWeight: 600 }}>
-                Status saat ini:{' '}
-                <span style={{ color: isCompleted ? '#4ADE80' : isCancelled ? '#F87171' : '#60A5FA' }}>
+              <div style={{ fontSize: '13px', color: '#0F172A', marginTop: '2px', fontWeight: 600 }}>
+                Status:{' '}
+                <span style={{ color: isCompleted ? '#16A34A' : isCancelled ? '#DC2626' : '#2563EB' }}>
                   {STATUS_STEPS[currentStepIndex]?.label || currentStatus}
                 </span>
               </div>
             </div>
 
-            {/* Pulse live badge */}
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '5px',
-              background: 'rgba(59,130,246,0.15)', color: '#60A5FA',
-              border: '1px solid rgba(59,130,246,0.25)',
-              borderRadius: '999px', fontSize: '10.5px', fontWeight: 700,
-              padding: '3px 9px',
+              background: '#EFF6FF', color: '#1D4ED8',
+              border: '1px solid #DBEAFE',
+              borderRadius: '999px', fontSize: '11px', fontWeight: 600,
+              padding: '3px 10px',
             }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6', display: 'inline-block' }}/>
-              LIVE TRACKING
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2563EB', display: 'inline-block' }}/>
+              Live Tracking
             </div>
           </div>
 
@@ -238,23 +238,22 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
                     {/* Indicator Column */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                       <div style={{
-                        width: '32px', height: '32px',
+                        width: '30px', height: '30px',
                         borderRadius: '50%',
-                        background: done ? '#16A34A' : active ? '#2563EB' : 'rgba(255,255,255,0.06)',
-                        border: active ? '2px solid #3B82F6' : done ? 'none' : '1px solid rgba(255,255,255,0.12)',
+                        background: done ? '#16A34A' : active ? '#2563EB' : '#F1F5F9',
+                        border: active ? '3px solid #DBEAFE' : done ? 'none' : '1px solid #CBD5E1',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: active ? '0 0 0 4px rgba(59,130,246,0.2)' : 'none',
-                        transition: 'all 0.3s ease',
+                        color: done || active ? '#FFFFFF' : '#94A3B8',
                         flexShrink: 0,
                       }}>
                         {done ? (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="20 6 9 17 4 12"/>
                           </svg>
                         ) : active ? (
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }} />
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FFFFFF' }} />
                         ) : (
-                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
+                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#94A3B8' }} />
                         )}
                       </div>
                       {!isLast && (
@@ -262,8 +261,8 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
                           width: '2px',
                           flex: 1,
                           minHeight: '22px',
-                          background: done ? '#16A34A' : 'rgba(255,255,255,0.08)',
-                          margin: '4px 0',
+                          background: done ? '#16A34A' : '#E2E8F0',
+                          margin: '3px 0',
                         }} />
                       )}
                     </div>
@@ -271,25 +270,25 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
                     {/* Step details */}
                     <div style={{
                       paddingBottom: isLast ? '0' : '16px',
-                      paddingTop: '4px',
+                      paddingTop: '3px',
                     }}>
                       <div style={{
                         fontSize: '13.5px',
                         fontWeight: active ? 700 : done ? 600 : 500,
-                        color: done ? '#4ADE80' : active ? '#F1F5F9' : '#475569',
+                        color: done ? '#15803D' : active ? '#0F172A' : '#64748B',
                       }}>
                         {step.label}
                       </div>
-                      <div style={{ fontSize: '11px', color: pending ? '#334155' : '#64748B', marginTop: '2px', lineHeight: 1.4 }}>
+                      <div style={{ fontSize: '11.5px', color: pending ? '#94A3B8' : '#475569', marginTop: '2px', lineHeight: 1.4 }}>
                         {step.desc}
                       </div>
                       {active && (
                         <div style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '5px',
-                          background: 'rgba(59,130,246,0.15)', color: '#60A5FA',
-                          border: '1px solid rgba(59,130,246,0.25)',
-                          borderRadius: '999px', fontSize: '10px', fontWeight: 700,
-                          padding: '2px 8px', marginTop: '6px',
+                          display: 'inline-flex', alignItems: 'center', gap: '4px',
+                          background: '#EFF6FF', color: '#1D4ED8',
+                          border: '1px solid #DBEAFE',
+                          borderRadius: '6px', fontSize: '10.5px', fontWeight: 600,
+                          padding: '2px 8px', marginTop: '5px',
                         }}>
                           Sedang Berlangsung
                         </div>
@@ -301,11 +300,11 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
             </div>
           ) : (
             <div style={{
-              background: 'rgba(239,68,68,0.1)',
-              border: '1px solid rgba(239,68,68,0.25)',
+              background: '#FEE2E2',
+              border: '1px solid #FECACA',
               borderRadius: '10px',
               padding: '12px',
-              color: '#F87171',
+              color: '#DC2626',
               fontSize: '12.5px',
               textAlign: 'center',
             }}>
@@ -318,16 +317,16 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
             <div style={{
               marginTop: '16px',
               paddingTop: '14px',
-              borderTop: '1px solid rgba(255,255,255,0.07)',
+              borderTop: '1px solid #F1F5F9',
             }}>
-              <div style={{ fontSize: '10.5px', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.04em', marginBottom: '4px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748B', letterSpacing: '0.02em', marginBottom: '4px' }}>
                 CATATAN ANDA
               </div>
               <div style={{
-                fontSize: '12px',
-                color: '#E2E8F0',
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                fontSize: '12.5px',
+                color: '#334155',
+                background: '#F8FAFC',
+                border: '1px solid #E2E8F0',
                 borderRadius: '8px',
                 padding: '8px 12px',
               }}>
@@ -339,12 +338,12 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
 
         <div style={{
           textAlign: 'center',
-          fontSize: '11px',
+          fontSize: '11.5px',
           color: '#64748B',
           lineHeight: 1.6,
           padding: '0 8px',
         }}>
-          💡 Simpan nota ini. Anda dapat memindai kembali QR code kapan saja untuk memeriksa pembaruan status pengerjaan laundry.
+          Simpan nota ini. Anda dapat memindai kembali QR code kapan saja untuk memeriksa status pengerjaan cucian santri.
         </div>
       </div>
     )
@@ -354,22 +353,23 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
   return (
     <form onSubmit={handleSubmit} style={{ width: '100%' }}>
       <div style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '16px',
+        background: '#FFFFFF',
+        border: '1px solid #E2E8F0',
+        borderRadius: '14px',
         padding: '18px',
         marginBottom: '16px',
+        boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.04)',
       }}>
         <label style={{
           display: 'block',
-          fontSize: '11px',
+          fontSize: '11.5px',
           fontWeight: 600,
-          color: '#CBD5E1',
+          color: '#475569',
           marginBottom: '8px',
-          letterSpacing: '0.04em',
+          letterSpacing: '0.02em',
         }}>
           CATATAN TAMBAHAN UNTUK PETUGAS
-          <span style={{ color: '#64748B', fontWeight: 400, marginLeft: '6px' }}>(opsional)</span>
+          <span style={{ color: '#94A3B8', fontWeight: 400, marginLeft: '6px' }}>(opsional)</span>
         </label>
         <textarea
           value={note}
@@ -378,11 +378,11 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
           maxLength={500}
           style={{
             width: '100%',
-            padding: '12px 14px',
+            padding: '10px 14px',
             borderRadius: '10px',
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            color: '#F8FAFC',
+            background: '#FFFFFF',
+            border: '1px solid #CBD5E1',
+            color: '#0F172A',
             fontSize: '13px',
             outline: 'none',
             boxSizing: 'border-box',
@@ -391,19 +391,19 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
           placeholder="Contoh: baju putih jangan dicampur, ada baju batik, mohon setrika licin..."
           disabled={state === 'loading'}
         />
-        <div style={{ fontSize: '10.5px', color: '#64748B', marginTop: '5px', textAlign: 'right' }}>
+        <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '5px', textAlign: 'right' }}>
           {note.length}/500
         </div>
       </div>
 
       {state === 'error' && (
         <div style={{
-          background: 'rgba(239,68,68,0.12)',
-          border: '1px solid rgba(239,68,68,0.3)',
-          borderRadius: '12px',
+          background: '#FEE2E2',
+          border: '1px solid #FECACA',
+          borderRadius: '10px',
           padding: '12px 14px',
-          color: '#F87171',
-          fontSize: '12px',
+          color: '#DC2626',
+          fontSize: '12.5px',
           marginBottom: '14px',
         }}>
           {errorMsg}
@@ -415,22 +415,20 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
         disabled={state === 'loading'}
         style={{
           width: '100%',
-          padding: '13px',
-          borderRadius: '12px',
-          background: state === 'loading'
-            ? 'rgba(59,130,246,0.5)'
-            : 'linear-gradient(135deg, #2563EB, #1D4ED8)',
-          color: '#fff',
-          fontSize: '14px',
-          fontWeight: 700,
+          padding: '12px',
+          borderRadius: '10px',
+          background: state === 'loading' ? '#93C5FD' : '#2563EB',
+          color: '#FFFFFF',
+          fontSize: '13.5px',
+          fontWeight: 600,
           border: 'none',
           cursor: state === 'loading' ? 'not-allowed' : 'pointer',
-          boxShadow: '0 4px 14px rgba(37,99,235,0.4)',
+          boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '8px',
-          transition: 'all 0.15s ease',
+          transition: 'background-color 0.15s',
         }}
       >
         {state === 'loading' ? (
@@ -453,7 +451,7 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
       </button>
 
       <p style={{
-        fontSize: '11px',
+        fontSize: '11.5px',
         color: '#64748B',
         textAlign: 'center',
         marginTop: '12px',

@@ -38,28 +38,28 @@ export default async function ConfirmationPage({ params }: Props) {
     return (
       <main style={{
         minHeight: '100vh',
-        background: 'linear-gradient(160deg, #0D1929 0%, #0F172A 60%, #111827 100%)',
+        backgroundColor: '#F8FAFC',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '20px',
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
       }}>
         <div style={{
           width: '100%',
           maxWidth: '380px',
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(239,68,68,0.25)',
+          background: '#FFFFFF',
+          border: '1px solid #FECACA',
           borderRadius: '16px',
           padding: '28px 20px',
           textAlign: 'center',
-          backdropFilter: 'blur(12px)',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
         }}>
           <div style={{
             width: '48px', height: '48px',
             borderRadius: '12px',
-            background: 'rgba(239,68,68,0.15)',
-            color: '#F87171',
+            background: '#FEE2E2',
+            color: '#DC2626',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             marginBottom: '14px',
           }}>
@@ -69,19 +69,19 @@ export default async function ConfirmationPage({ params }: Props) {
               <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
           </div>
-          <h1 style={{ fontSize: '17px', fontWeight: 800, color: '#F87171', margin: '0 0 8px' }}>
+          <h1 style={{ fontSize: '17px', fontWeight: 800, color: '#DC2626', margin: '0 0 8px' }}>
             QR Code Tidak Valid
           </h1>
-          <p style={{ fontSize: '12.5px', color: '#94A3B8', margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
             QR Code ini tidak dapat diverifikasi keasliannya. Pastikan Anda memindai QR langsung dari nota resmi.
           </p>
           <div style={{
             marginTop: '16px',
             padding: '8px 12px',
-            background: 'rgba(255,255,255,0.03)',
+            background: '#F1F5F9',
             borderRadius: '8px',
             fontSize: '11px',
-            color: '#64748B',
+            color: '#475569',
             fontFamily: 'monospace',
           }}>
             ID: {payload.id}
@@ -111,37 +111,37 @@ export default async function ConfirmationPage({ params }: Props) {
   return (
     <main style={{
       minHeight: '100vh',
-      background: 'linear-gradient(160deg, #0D1929 0%, #0F172A 60%, #111827 100%)',
-      fontFamily: "'Inter', system-ui, sans-serif",
-      color: '#F1F5F9',
+      backgroundColor: '#F8FAFC',
+      fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+      color: '#0F172A',
       paddingBottom: '48px',
     }}>
       {/* Top Header Bar */}
       <div style={{
-        background: 'rgba(255,255,255,0.04)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        padding: '14px 20px',
+        background: '#FFFFFF',
+        borderBottom: '1px solid #E2E8F0',
+        padding: '12px 20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
             width: '32px', height: '32px',
-            background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-            borderRadius: '9px',
+            background: '#2563EB',
+            borderRadius: '8px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff',
-            boxShadow: '0 4px 12px rgba(59,130,246,0.35)',
+            color: '#FFFFFF',
           }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="2" width="20" height="20" rx="4"/>
               <circle cx="12" cy="13" r="4"/>
               <path d="M6 6h.01M9 6h3"/>
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: '#F1F5F9' }}>Latansa Laundry</div>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>Latansa Laundry</div>
             <div style={{ fontSize: '10px', color: '#64748B' }}>
               {existingOrder ? 'Progres Status Laundry' : 'Konfirmasi Penerimaan Laundry'}
             </div>
@@ -150,49 +150,49 @@ export default async function ConfirmationPage({ params }: Props) {
 
         <span style={{
           fontSize: '11px',
-          fontWeight: 700,
-          padding: '4px 10px',
+          fontWeight: 600,
+          padding: '3px 10px',
           borderRadius: '999px',
-          background: existingOrder ? 'rgba(34,197,94,0.15)' : 'rgba(234,179,8,0.15)',
-          color: existingOrder ? '#4ADE80' : '#FDE047',
-          border: existingOrder ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(234,179,8,0.3)',
+          background: existingOrder ? '#DCFCE7' : '#FEF3C7',
+          color: existingOrder ? '#15803D' : '#92400E',
+          border: existingOrder ? '1px solid #BBF7D0' : '1px solid #FDE68A',
         }}>
           {existingOrder ? 'Sudah Disubmit' : 'Siap Kirim'}
         </span>
       </div>
 
-      <div style={{ maxWidth: '440px', margin: '0 auto', padding: '24px 16px 0' }}>
+      <div style={{ maxWidth: '440px', margin: '0 auto', padding: '20px 16px 0' }}>
 
         {/* Transaction Header */}
-        <div style={{ marginBottom: '18px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748B', letterSpacing: '0.06em', marginBottom: '4px' }}>
-            NO. TRANSAKSI
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748B', letterSpacing: '0.04em', marginBottom: '2px' }}>
+            NOMOR TRANSAKSI
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 800, color: '#F8FAFC', fontFamily: 'monospace', letterSpacing: '0.02em' }}>
+          <div style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A', fontFamily: 'monospace' }}>
             {payload.id}
           </div>
         </div>
 
         {/* Data Card */}
         <div style={{
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '16px',
-          padding: '20px',
+          background: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          borderRadius: '14px',
+          padding: '18px',
           marginBottom: '16px',
-          backdropFilter: 'blur(12px)',
+          boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.04)',
         }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', letterSpacing: '0.06em', marginBottom: '12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', marginBottom: '12px' }}>
             RINCIAN PESANAN
           </div>
 
-          <div style={{ display: 'grid', gap: '10px' }}>
+          <div style={{ display: 'grid', gap: '8px' }}>
             <DataRow label="Nama Santri" value={payload.santri} bold />
             <DataRow label="Nama Wali" value={payload.wali} />
             {payload.nis && <DataRow label="NIS / No. Reg" value={payload.nis} mono />}
             {payload.hp && <DataRow label="No. HP" value={payload.hp} />}
 
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '10px', marginTop: '2px', display: 'grid', gap: '8px' }}>
+            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '10px', marginTop: '2px', display: 'grid', gap: '8px' }}>
               {payload.layanan && (
                 <DataRow label="Tipe Layanan" value={payload.layanan.toUpperCase()} />
               )}
@@ -203,19 +203,19 @@ export default async function ConfirmationPage({ params }: Props) {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                background: 'rgba(59,130,246,0.08)',
-                border: '1px solid rgba(59,130,246,0.18)',
+                background: '#EFF6FF',
+                border: '1px solid #DBEAFE',
                 borderRadius: '10px',
-                padding: '10px 12px',
+                padding: '9px 12px',
                 marginTop: '4px',
               }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#93C5FD' }}>Total Bayar</span>
-                <span style={{ fontSize: '16px', fontWeight: 800, color: '#60A5FA' }}>{formatRupiah(payload.total)}</span>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#1E40AF' }}>Total Bayar</span>
+                <span style={{ fontSize: '16px', fontWeight: 800, color: '#1D4ED8' }}>{formatRupiah(payload.total)}</span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
-                <span>Metode: <strong style={{ color: '#E2E8F0' }}>{payload.bayar === 'qris' ? 'QRIS' : 'Cash'}</strong></span>
-                <span>Status: <strong style={{ color: payload.lunas ? '#4ADE80' : '#FDE047' }}>{payload.lunas ? 'Lunas' : 'Belum Lunas'}</strong></span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
+                <span>Metode: <strong style={{ color: '#0F172A' }}>{payload.bayar === 'qris' ? 'QRIS' : 'Cash'}</strong></span>
+                <span>Status: <strong style={{ color: payload.lunas ? '#16A34A' : '#D97706' }}>{payload.lunas ? 'Lunas' : 'Belum Lunas'}</strong></span>
               </div>
             </div>
           </div>
@@ -235,11 +235,11 @@ export default async function ConfirmationPage({ params }: Props) {
 function DataRow({ label, value, bold, mono }: { label: string; value: string; bold?: boolean; mono?: boolean }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-      <span style={{ fontSize: '12.5px', color: '#94A3B8', flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: '12.5px', color: '#64748B', flexShrink: 0 }}>{label}</span>
       <span style={{
         fontSize: '13px',
         fontWeight: bold ? 700 : 500,
-        color: bold ? '#F8FAFC' : '#CBD5E1',
+        color: bold ? '#0F172A' : '#334155',
         textAlign: 'right',
         fontFamily: mono ? 'monospace' : 'inherit',
       }}>
