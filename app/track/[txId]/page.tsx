@@ -20,13 +20,13 @@ const STATUS_STEPS: { key: OrderStatus; label: string; desc: string }[] = [
   { key: 'new', label: 'Pesanan Diterima', desc: 'Laundry Anda sudah terdaftar di sistem stand' },
   { key: 'received', label: 'Diterima Laundry', desc: 'Pakaian fisik telah diterima oleh petugas laundry' },
   { key: 'processing', label: 'Sedang Dicuci', desc: 'Pakaian sedang dalam proses pencucian & pengeringan' },
-  { key: 'ready', label: 'Siap Diambil', desc: 'Laundry selesai disetrika, rapi & siap diambil' },
-  { key: 'completed', label: 'Selesai', desc: 'Laundry telah diserahkan kembali' },
+  { key: 'ready', label: 'Siap Diambil', desc: 'Cucian selesai disetrika rapi & siap diambil di counter' },
 ]
 
-const STATUS_ORDER = ['new', 'received', 'processing', 'ready', 'completed']
+const STATUS_ORDER = ['new', 'received', 'processing', 'ready']
 
 function getStepIndex(status: string) {
+  if (status === 'completed' || status === 'ready') return 3
   const idx = STATUS_ORDER.indexOf(status)
   return idx === -1 ? 0 : idx
 }
@@ -251,10 +251,12 @@ export default async function TrackPage({ params }: Props) {
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {STATUS_STEPS.map((step, i) => {
-                const done = isCompleted ? true : i < currentStepIndex
-                const active = !isCompleted && i === currentStepIndex
-                const pending = !isCompleted && i > currentStepIndex
+                const isFinal = order.status === 'ready' || order.status === 'completed'
+                const done = isFinal ? true : i < currentStepIndex
+                const active = !isFinal && i === currentStepIndex
+                const pending = !isFinal && i > currentStepIndex
                 const isLast = i === STATUS_STEPS.length - 1
+                const isReadyStep = step.key === 'ready' && isFinal
 
                 return (
                   <div key={step.key} style={{ display: 'flex', gap: '14px' }}>
@@ -297,26 +299,48 @@ export default async function TrackPage({ params }: Props) {
                     }}>
                       <div style={{
                         fontSize: '13.5px',
-                        fontWeight: active ? 700 : done ? 600 : 500,
+                        fontWeight: active || isReadyStep ? 700 : done ? 600 : 500,
                         color: done ? '#15803D' : active ? '#0F172A' : '#64748B',
                       }}>
                         {step.label}
                       </div>
                       <div style={{ fontSize: '11.5px', color: pending ? '#94A3B8' : '#475569', marginTop: '2px', lineHeight: 1.4 }}>
-                        {step.key === 'completed' && order.status === 'ready'
-                          ? 'Tinggal serah terima saat santri datang mengambil pakaian'
-                          : step.desc}
+                        {step.desc}
                       </div>
                       {active && (
                         <div style={{
                           display: 'inline-flex', alignItems: 'center', gap: '4px',
-                          background: step.key === 'ready' ? '#DCFCE7' : '#EFF6FF',
-                          color: step.key === 'ready' ? '#15803D' : '#1D4ED8',
-                          border: step.key === 'ready' ? '1px solid #BBF7D0' : '1px solid #DBEAFE',
+                          background: '#EFF6FF',
+                          color: '#1D4ED8',
+                          border: '1px solid #DBEAFE',
                           borderRadius: '6px', fontSize: '10.5px', fontWeight: 600,
                           padding: '2px 8px', marginTop: '5px',
                         }}>
-                          {step.key === 'ready' ? 'Bisa Diambil Sekarang' : 'Sedang Berlangsung'}
+                          Sedang Berlangsung
+                        </div>
+                      )}
+                      {step.key === 'ready' && order.status === 'ready' && (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '4px',
+                          background: '#DCFCE7',
+                          color: '#15803D',
+                          border: '1px solid #BBF7D0',
+                          borderRadius: '6px', fontSize: '10.5px', fontWeight: 600,
+                          padding: '2px 8px', marginTop: '5px',
+                        }}>
+                          Bisa Diambil Sekarang
+                        </div>
+                      )}
+                      {step.key === 'ready' && order.status === 'completed' && (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '4px',
+                          background: '#DCFCE7',
+                          color: '#15803D',
+                          border: '1px solid #BBF7D0',
+                          borderRadius: '6px', fontSize: '10.5px', fontWeight: 600,
+                          padding: '2px 8px', marginTop: '5px',
+                        }}>
+                          Sudah Diambil
                         </div>
                       )}
                     </div>
