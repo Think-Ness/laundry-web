@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, STATUS_TRANSITIONS, type Order, type OrderEvent, type OrderStatus } from '@/types'
 import OrderActions from './OrderActions'
+import PaymentVerifier from './PaymentVerifier'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -105,8 +106,8 @@ export default async function OrderDetailPage({ params }: Props) {
               <span className="text-sm font-bold text-gray-700">Total</span>
               <span className="text-base font-bold text-blue-700">Rp {order.total_amount.toLocaleString('id-ID')}</span>
             </div>
-            <DetailRow label="Metode Bayar" value={order.payment_method === 'qris' ? 'QRIS' : 'Cash'} />
-            <DetailRow label="Status Bayar" value={order.payment_status === 'paid' ? '✅ Lunas' : '⚠️ Pending'} />
+            <DetailRow label="Metode Bayar" value={order.payment_method === 'transfer' ? 'Transfer Bank (TF)' : order.payment_method === 'qris' ? 'QRIS Stand' : 'Cash / Tunai'} />
+            <DetailRow label="Status Bayar" value={order.payment_status === 'paid' ? 'Lunas' : order.payment_proof_url ? 'Menunggu Verifikasi Bukti' : 'Belum Lunas'} />
             {order.customer_note && (
               <>
                 <hr className="border-gray-100" />
@@ -121,7 +122,15 @@ export default async function OrderDetailPage({ params }: Props) {
 
         {/* Timeline + Actions */}
         <div className="space-y-5">
-          {/* Actions */}
+          {/* Payment Verifier & Proof Viewer */}
+          <PaymentVerifier
+            orderId={order.id}
+            paymentMethod={order.payment_method}
+            paymentStatus={order.payment_status}
+            proofUrl={order.payment_proof_url}
+          />
+
+          {/* Workflow Status Actions */}
           <OrderActions
             orderId={order.id}
             currentStatus={order.status as OrderStatus}

@@ -8,6 +8,8 @@ export interface OrderInfo {
   id: string
   transaction_id: string
   status: string
+  payment_status?: string | null
+  payment_proof_url?: string | null
   submitted_at?: string | null
   received_at?: string | null
   processing_at?: string | null
@@ -46,7 +48,67 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
   const [state, setState] = useState<State>(initialOrder ? 'already_submitted' : 'idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // Payment proof states
+  const [proofFile, setProofFile] = useState<File | null>(null)
+  const [proofPreview, setProofPreview] = useState<string | null>(initialOrder?.payment_proof_url || null)
+  const [isUploadingProof, setIsUploadingProof] = useState(false)
+  const [proofUploadSuccess, setProofUploadSuccess] = useState(false)
+  const [proofUploadError, setProofUploadError] = useState('')
+  const [showProofModal, setShowProofModal] = useState(false)
+
   const router = useRouter()
+
+  const isTransferOrQris = payload.bayar === 'transfer' || payload.bayar === 'qris' || !payload.lunas
+
+  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setProofFile(file)
+    setProofPreview(URL.createObjectURL(file))
+    setProofUploadSuccess(false)
+    setProofUploadError('')
+  }
+
+  // Upload proof directly (when order already submitted or standalone)
+  async function handleDirectUpload(selectedFile?: File) {
+    const targetFile = selectedFile || proofFile
+    if (!targetFile) return
+
+    setIsUploadingProof(true)
+    setProofUploadError('')
+    setProofUploadSuccess(false)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', targetFile)
+      formData.append('transaction_id', payload.id)
+      if (order?.id) {
+        formData.append('order_id', order.id)
+      }
+
+      const res = await fetch('/api/upload-proof', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+
+      if (res.ok && data.proof_url) {
+        setProofPreview(data.proof_url)
+        setProofUploadSuccess(true)
+        if (order) {
+          setOrder({ ...order, payment_proof_url: data.proof_url, payment_status: 'verification' })
+        }
+        router.refresh()
+      } else {
+        setProofUploadError(data.message || 'Gagal mengunggah bukti pembayaran.')
+      }
+    } catch {
+      setProofUploadError('Koneksi terputus saat mengunggah. Silakan coba lagi.')
+    } finally {
+      setIsUploadingProof(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -56,10 +118,35 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
     setErrorMsg('')
 
     try {
+      let uploadedProofUrl: string | undefined = undefined
+
+      // If user selected a proof file, upload it first
+      if (proofFile) {
+        try {
+          const formData = new FormData()
+          formData.append('file', proofFile)
+          formData.append('transaction_id', payload.id)
+          const upRes = await fetch('/api/upload-proof', {
+            method: 'POST',
+            body: formData,
+          })
+          if (upRes.ok) {
+            const upJson = await upRes.json()
+            uploadedProofUrl = upJson.proof_url
+          }
+        } catch (upErr) {
+          console.warn('Proof pre-upload failed, proceeding with confirmation:', upErr)
+        }
+      }
+
       const res = await fetch('/api/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, note }),
+        body: JSON.stringify({
+          token,
+          note,
+          payment_proof_url: uploadedProofUrl,
+        }),
       })
 
       const data = await res.json()
@@ -70,6 +157,8 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
           id: data.order_id || 'new',
           transaction_id: payload.id,
           status: 'new',
+          payment_status: uploadedProofUrl ? 'verification' : payload.lunas ? 'paid' : 'pending',
+          payment_proof_url: uploadedProofUrl || null,
           customer_note: note,
           submitted_at: new Date().toISOString(),
         })
@@ -80,6 +169,7 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
           id: data.order_id || 'existing',
           transaction_id: payload.id,
           status: 'new',
+          payment_proof_url: uploadedProofUrl || null,
           customer_note: note,
         })
         router.refresh()
@@ -106,8 +196,11 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
   const currentStepIndex = getStepIndex(currentStatus)
   const isCancelled = currentStatus === 'cancelled'
   const isCompleted = currentStatus === 'completed'
+  const activeProofUrl = order?.payment_proof_url || proofPreview
 
-  // If already submitted, render the progress tracker directly below the data
+  // ─────────────────────────────────────────────────────────────────────────────
+  // View 1: Already Submitted -> Progress Stepper & Proof Viewer
+  // ─────────────────────────────────────────────────────────────────────────────
   if (isSubmitted) {
     return (
       <div style={{ width: '100%' }}>
@@ -240,7 +333,7 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
               <span style={{ fontSize: '18px' }}>🎉</span>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 700, color: '#1E40AF' }}>
-                  Cucian Selesai & Siap Diambil!
+                  Cucian Selesai &amp; Siap Diambil!
                 </div>
                 <div style={{ fontSize: '11.5px', color: '#1E3A8A', marginTop: '2px' }}>
                   Pakaian telah selesai dicuci dan disetrika rapi. Silakan ambil di counter laundry pondok.
@@ -249,9 +342,9 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
             </div>
           )}
 
-          {isCompleted && (
+          {currentStatus === 'completed' && (
             <div style={{
-              background: '#DCFCE7',
+              background: '#F0FDF4',
               border: '1px solid #BBF7D0',
               borderRadius: '10px',
               padding: '10px 14px',
@@ -260,113 +353,101 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
               alignItems: 'center',
               gap: '10px',
             }}>
-              <span style={{ fontSize: '18px' }}>✅</span>
+              <span style={{ fontSize: '18px' }}>✨</span>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 700, color: '#15803D' }}>
                   Pesanan Telah Selesai
                 </div>
                 <div style={{ fontSize: '11.5px', color: '#166534', marginTop: '2px' }}>
-                  Pakaian telah diserahkan kembali kepada santri / wali. Terima kasih!
+                  Cucian telah diambil &amp; diserahkan kepada santri. Terima kasih telah menggunakan Latansa Laundry.
                 </div>
               </div>
             </div>
           )}
 
+          {/* Stepper Timeline */}
           {!isCancelled ? (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {STATUS_STEPS.map((step, i) => {
-                const isFinal = currentStatus === 'ready' || currentStatus === 'completed'
-                const done = isFinal ? true : i < currentStepIndex
-                const active = !isFinal && i === currentStepIndex
-                const pending = !isFinal && i > currentStepIndex
-                const isLast = i === STATUS_STEPS.length - 1
-                const isReadyStep = step.key === 'ready' && isFinal
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+              {STATUS_STEPS.map((step, idx) => {
+                const isStepFinished = (currentStatus === 'ready' || isCompleted)
+                  ? true
+                  : idx < currentStepIndex
+                const isStepActive = (currentStatus === 'ready' || isCompleted)
+                  ? idx === 3
+                  : idx === currentStepIndex
+                const isStepFuture = !isStepFinished && !isStepActive
 
                 return (
-                  <div key={step.key} style={{ display: 'flex', gap: '14px' }}>
-                    {/* Indicator Column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                  <div key={step.key} style={{ display: 'flex', position: 'relative', minHeight: '56px' }}>
+                    {idx < STATUS_STEPS.length - 1 && (
                       <div style={{
-                        width: '30px', height: '30px',
-                        borderRadius: '50%',
-                        background: done ? '#16A34A' : active ? '#2563EB' : '#F1F5F9',
-                        border: active ? '3px solid #DBEAFE' : done ? 'none' : '1px solid #CBD5E1',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: done || active ? '#FFFFFF' : '#94A3B8',
-                        flexShrink: 0,
-                      }}>
-                        {done ? (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        ) : active ? (
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FFFFFF' }} />
-                        ) : (
-                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#94A3B8' }} />
-                        )}
-                      </div>
-                      {!isLast && (
-                        <div style={{
-                          width: '2px',
-                          flex: 1,
-                          minHeight: '22px',
-                          background: done ? '#16A34A' : '#E2E8F0',
-                          margin: '3px 0',
-                        }} />
+                        position: 'absolute',
+                        left: '15px',
+                        top: '32px',
+                        bottom: '-2px',
+                        width: '2px',
+                        backgroundColor: isStepFinished ? '#16A34A' : '#E2E8F0',
+                        zIndex: 0,
+                      }}/>
+                    )}
+
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: isStepFinished ? '#16A34A' : isStepActive ? '#2563EB' : '#F1F5F9',
+                      border: isStepFinished ? '2px solid #16A34A' : isStepActive ? '2px solid #2563EB' : '2px solid #CBD5E1',
+                      color: isStepFinished || isStepActive ? '#FFFFFF' : '#94A3B8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      zIndex: 1,
+                      flexShrink: 0,
+                      boxShadow: isStepActive ? '0 0 0 3px rgba(37, 99, 235, 0.15)' : 'none',
+                    }}>
+                      {isStepFinished ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      ) : (
+                        idx + 1
                       )}
                     </div>
 
-                    {/* Step details */}
-                    <div style={{
-                      paddingBottom: isLast ? '0' : '16px',
-                      paddingTop: '3px',
-                    }}>
+                    <div style={{ marginLeft: '14px', flex: 1, paddingBottom: '20px' }}>
                       <div style={{
-                        fontSize: '13.5px',
-                        fontWeight: active || isReadyStep ? 700 : done ? 600 : 500,
-                        color: done ? '#15803D' : active ? '#0F172A' : '#64748B',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: isStepFinished ? '#15803D' : isStepActive ? '#2563EB' : '#64748B',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
                       }}>
                         {step.label}
+                        {isStepActive && (
+                          <span style={{
+                            fontSize: '9.5px',
+                            fontWeight: 700,
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            background: currentStatus === 'ready' || isCompleted ? '#DCFCE7' : '#EFF6FF',
+                            color: currentStatus === 'ready' || isCompleted ? '#15803D' : '#2563EB',
+                            border: currentStatus === 'ready' || isCompleted ? '1px solid #BBF7D0' : '1px solid #BFDBFE',
+                          }}>
+                            {currentStatus === 'ready' || isCompleted ? 'SELESAI' : 'PROSES SAAT INI'}
+                          </span>
+                        )}
                       </div>
-                      <div style={{ fontSize: '11.5px', color: pending ? '#94A3B8' : '#475569', marginTop: '2px', lineHeight: 1.4 }}>
+                      <div style={{
+                        fontSize: '11.5px',
+                        color: isStepActive ? '#334155' : '#94A3B8',
+                        marginTop: '2px',
+                        lineHeight: 1.4,
+                      }}>
                         {step.desc}
                       </div>
-                      {active && (
-                        <div style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '4px',
-                          background: '#EFF6FF',
-                          color: '#1D4ED8',
-                          border: '1px solid #DBEAFE',
-                          borderRadius: '6px', fontSize: '10.5px', fontWeight: 600,
-                          padding: '2px 8px', marginTop: '5px',
-                        }}>
-                          Sedang Berlangsung
-                        </div>
-                      )}
-                      {step.key === 'ready' && currentStatus === 'ready' && (
-                        <div style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '4px',
-                          background: '#DCFCE7',
-                          color: '#15803D',
-                          border: '1px solid #BBF7D0',
-                          borderRadius: '6px', fontSize: '10.5px', fontWeight: 600,
-                          padding: '2px 8px', marginTop: '5px',
-                        }}>
-                          Bisa Diambil Sekarang
-                        </div>
-                      )}
-                      {step.key === 'ready' && currentStatus === 'completed' && (
-                        <div style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '4px',
-                          background: '#DCFCE7',
-                          color: '#15803D',
-                          border: '1px solid #BBF7D0',
-                          borderRadius: '6px', fontSize: '10.5px', fontWeight: 600,
-                          padding: '2px 8px', marginTop: '5px',
-                        }}>
-                          Sudah Diambil
-                        </div>
-                      )}
                     </div>
                   </div>
                 )
@@ -410,6 +491,170 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
           )}
         </div>
 
+        {/* Payment Proof Card in Tracking View */}
+        {isTransferOrQris && (
+          <div style={{
+            background: '#FFFFFF',
+            border: '1px solid #E2E8F0',
+            borderRadius: '14px',
+            padding: '18px',
+            marginBottom: '16px',
+            boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.04)',
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '12px',
+            }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em' }}>
+                  BUKTI PEMBAYARAN ({payload.bayar === 'transfer' ? 'TRANSFER BANK' : 'QRIS'})
+                </div>
+                <div style={{ fontSize: '12.5px', color: '#0F172A', marginTop: '2px', fontWeight: 600 }}>
+                  Status Bayar:{' '}
+                  <span style={{ color: (order?.payment_status === 'paid' || payload.lunas) ? '#16A34A' : activeProofUrl ? '#2563EB' : '#EA580C' }}>
+                    {(order?.payment_status === 'paid' || payload.lunas)
+                      ? 'Lunas'
+                      : activeProofUrl
+                      ? 'Menunggu Verifikasi Laundry'
+                      : 'Belum Bayar / Belum Ada Bukti'}
+                  </span>
+                </div>
+              </div>
+
+              <span style={{
+                fontSize: '10.5px',
+                fontWeight: 600,
+                padding: '3px 8px',
+                borderRadius: '6px',
+                background: activeProofUrl ? '#EFF6FF' : '#FFF7ED',
+                color: activeProofUrl ? '#1D4ED8' : '#C2410C',
+                border: activeProofUrl ? '1px solid #BFDBFE' : '1px solid #FFEDD5',
+              }}>
+                {activeProofUrl ? 'Bukti Terunggah' : 'Perlu Bukti'}
+              </span>
+            </div>
+
+            {activeProofUrl ? (
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: '#F8FAFC', padding: '10px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <img
+                  src={activeProofUrl}
+                  alt="Bukti Pembayaran"
+                  onClick={() => setShowProofModal(true)}
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                  }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#0F172A' }}>
+                    Bukti Pembayaran Terkirim
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
+                    Petugas laundry akan memeriksa &amp; memvalidasi transaksi Anda.
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowProofModal(true)}
+                      style={{
+                        background: '#EFF6FF',
+                        border: '1px solid #BFDBFE',
+                        color: '#1D4ED8',
+                        borderRadius: '6px',
+                        padding: '3px 8px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Lihat Foto
+                    </button>
+                    <label style={{
+                      background: '#FFFFFF',
+                      border: '1px solid #CBD5E1',
+                      color: '#475569',
+                      borderRadius: '6px',
+                      padding: '3px 8px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}>
+                      Ganti Foto
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0]
+                          if (f) handleDirectUpload(f)
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p style={{ fontSize: '12px', color: '#64748B', marginBottom: '10px', lineHeight: 1.4 }}>
+                  Silakan unggah screenshot atau foto bukti transaksi agar langsung tersampaikan ke petugas laundry.
+                </p>
+                <label style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px dashed #93C5FD',
+                  background: '#EFF6FF',
+                  borderRadius: '10px',
+                  padding: '16px',
+                  cursor: isUploadingProof ? 'not-allowed' : 'pointer',
+                  textAlign: 'center',
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '6px' }}>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#1D4ED8' }}>
+                    {isUploadingProof ? 'Sedang Mengunggah...' : 'Pilih Foto / Screenshot Bukti Bayar'}
+                  </span>
+                  <span style={{ fontSize: '10.5px', color: '#64748B', marginTop: '2px' }}>
+                    JPG, PNG, atau WEBP (Maksimal 8MB)
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploadingProof}
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) handleDirectUpload(f)
+                    }}
+                  />
+                </label>
+              </div>
+            )}
+
+            {proofUploadSuccess && (
+              <div style={{ marginTop: '10px', fontSize: '11.5px', color: '#15803D', background: '#DCFCE7', padding: '6px 10px', borderRadius: '6px', border: '1px solid #BBF7D0' }}>
+                Bukti pembayaran berhasil diunggah dan terkirim ke sistem laundry!
+              </div>
+            )}
+            {proofUploadError && (
+              <div style={{ marginTop: '10px', fontSize: '11.5px', color: '#DC2626', background: '#FEE2E2', padding: '6px 10px', borderRadius: '6px', border: '1px solid #FECACA' }}>
+                {proofUploadError}
+              </div>
+            )}
+          </div>
+        )}
+
         <div style={{
           textAlign: 'center',
           fontSize: '11.5px',
@@ -419,13 +664,174 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
         }}>
           Simpan nota ini. Anda dapat memindai kembali QR code kapan saja untuk memeriksa status pengerjaan cucian santri.
         </div>
+
+        {/* Modal Full Image Preview */}
+        {showProofModal && activeProofUrl && (
+          <div
+            onClick={() => setShowProofModal(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#FFFFFF',
+                borderRadius: '12px',
+                padding: '16px',
+                maxWidth: '480px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflow: 'auto',
+                position: 'relative',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>Foto Bukti Pembayaran</div>
+                <button
+                  type="button"
+                  onClick={() => setShowProofModal(false)}
+                  style={{
+                    background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#64748B'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+              <img
+                src={activeProofUrl}
+                alt="Bukti Transfer"
+                style={{ width: '100%', height: 'auto', borderRadius: '8px', border: '1px solid #E2E8F0' }}
+              />
+            </div>
+          </div>
+        )}
       </div>
     )
   }
 
-  // If not yet submitted, render the Confirmation Form
+  // ─────────────────────────────────────────────────────────────────────────────
+  // View 2: Initial Confirmation Form (Before Submit)
+  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+      {/* Upload Bukti Pembayaran Box (Only if Transfer, QRIS, or unpaid) */}
+      {isTransferOrQris && (
+        <div style={{
+          background: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          borderRadius: '14px',
+          padding: '18px',
+          marginBottom: '16px',
+          boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.04)',
+        }}>
+          <label style={{
+            display: 'block',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            color: '#1E40AF',
+            marginBottom: '4px',
+            letterSpacing: '0.02em',
+          }}>
+            UPLOAD BUKTI PEMBAYARAN ({payload.bayar === 'transfer' ? 'TRANSFER BANK' : 'QRIS'})
+          </label>
+          <p style={{ fontSize: '12px', color: '#64748B', marginBottom: '12px', lineHeight: 1.4 }}>
+            Silakan unggah foto atau screenshot bukti transfer / struk QRIS Anda agar dapat diverifikasi oleh bagian laundry pondok.
+          </p>
+
+          {proofPreview ? (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              background: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              borderRadius: '10px',
+              padding: '10px 12px',
+            }}>
+              <img
+                src={proofPreview}
+                alt="Preview Bukti"
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  objectFit: 'cover',
+                  borderRadius: '6px',
+                  border: '1px solid #CBD5E1',
+                }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#0F172A' }}>
+                  {proofFile ? proofFile.name : 'Bukti Pembayaran Terpilih'}
+                </div>
+                <div style={{ fontSize: '11px', color: '#16A34A', marginTop: '2px', fontWeight: 500 }}>
+                  Foto siap dikirim bersama pesanan
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProofFile(null)
+                    setProofPreview(null)
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    fontSize: '11px',
+                    color: '#DC2626',
+                    cursor: 'pointer',
+                    marginTop: '4px',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Hapus / Pilih Ulang
+                </button>
+              </div>
+            </div>
+          ) : (
+            <label style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px dashed #93C5FD',
+              background: '#EFF6FF',
+              borderRadius: '10px',
+              padding: '18px 14px',
+              cursor: 'pointer',
+              textAlign: 'center',
+              transition: 'background 0.15s ease',
+            }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '6px' }}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#1D4ED8' }}>
+                Pilih Foto / Screenshot Bukti Bayar
+              </span>
+              <span style={{ fontSize: '11px', color: '#64748B', marginTop: '3px' }}>
+                Kamera atau Galeri (JPG, PNG, WEBP)
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelected}
+                style={{ display: 'none' }}
+              />
+            </label>
+          )}
+        </div>
+      )}
+
+      {/* Note Input */}
       <div style={{
         background: '#FFFFFF',
         border: '1px solid #E2E8F0',
@@ -511,7 +917,7 @@ export default function ConfirmationForm({ payload, token, initialOrder }: Props
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"/>
               <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor"/>
             </svg>
-            Mengirim Data...
+            Mengirim Data &amp; Bukti...
           </>
         ) : (
           <>

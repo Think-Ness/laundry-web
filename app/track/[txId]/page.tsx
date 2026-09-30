@@ -39,7 +39,7 @@ export default async function TrackPage({ params }: Props) {
 
   const { data: order } = await supabase
     .from('orders')
-    .select('id, transaction_id, customer_name, student_name, student_reg_number, service_type, weight, total_amount, payment_method, payment_status, status, submitted_at, received_at, processing_at, completed_at, customer_note, created_at')
+    .select('id, transaction_id, customer_name, student_name, student_reg_number, service_type, weight, total_amount, payment_method, payment_status, payment_proof_url, status, submitted_at, received_at, processing_at, completed_at, customer_note, created_at')
     .eq('transaction_id', transactionId)
     .single()
 
@@ -155,6 +155,13 @@ export default async function TrackPage({ params }: Props) {
                 <span style={{ fontSize: '16px', fontWeight: 800, color: '#1D4ED8' }}>
                   Rp {Number(order.total_amount).toLocaleString('id-ID')}
                 </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
+                <span>Metode: <strong style={{ color: '#0F172A' }}>{order.payment_method === 'transfer' ? 'Transfer Bank' : order.payment_method === 'qris' ? 'QRIS Stand' : 'Cash'}</strong></span>
+                <span>Status: <strong style={{ color: order.payment_status === 'paid' ? '#16A34A' : order.payment_proof_url ? '#2563EB' : '#D97706' }}>
+                  {order.payment_status === 'paid' ? 'Lunas' : order.payment_proof_url ? 'Menunggu Verifikasi Bukti' : 'Belum Lunas'}
+                </strong></span>
               </div>
             </div>
           </div>

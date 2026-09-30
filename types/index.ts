@@ -19,8 +19,9 @@ export interface Order {
   weight: number
   unit_price: number
   total_amount: number
-  payment_method: 'cash' | 'qris'
+  payment_method: 'cash' | 'qris' | 'transfer'
   payment_status: string
+  payment_proof_url?: string | null
   customer_note: string | null
   status: OrderStatus
   submitted_at: string | null
@@ -49,7 +50,7 @@ export interface Profile {
   is_active: boolean
 }
 
-export type PaymentMethod = 'cash' | 'qris'
+export type PaymentMethod = 'cash' | 'qris' | 'transfer'
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   waiting_confirmation: 'Menunggu Konfirmasi',

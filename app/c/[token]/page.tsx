@@ -97,7 +97,7 @@ export default async function ConfirmationPage({ params }: Props) {
     const supabase = createServiceClient()
     const { data } = await supabase
       .from('orders')
-      .select('id, transaction_id, status, submitted_at, received_at, processing_at, completed_at, customer_note, created_at, updated_at')
+      .select('id, transaction_id, status, payment_status, payment_proof_url, submitted_at, received_at, processing_at, completed_at, customer_note, created_at, updated_at')
       .eq('transaction_id', payload.id)
       .maybeSingle()
 
@@ -214,8 +214,10 @@ export default async function ConfirmationPage({ params }: Props) {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
-                <span>Metode: <strong style={{ color: '#0F172A' }}>{payload.bayar === 'qris' ? 'QRIS' : 'Cash'}</strong></span>
-                <span>Status: <strong style={{ color: payload.lunas ? '#16A34A' : '#D97706' }}>{payload.lunas ? 'Lunas' : 'Belum Lunas'}</strong></span>
+                <span>Metode: <strong style={{ color: '#0F172A' }}>{payload.bayar === 'qris' ? 'QRIS' : payload.bayar === 'transfer' ? 'Transfer Bank' : 'Cash'}</strong></span>
+                <span>Status: <strong style={{ color: (existingOrder?.payment_status === 'paid' || payload.lunas) ? '#16A34A' : existingOrder?.payment_proof_url ? '#2563EB' : '#D97706' }}>
+                  {(existingOrder?.payment_status === 'paid' || payload.lunas) ? 'Lunas' : existingOrder?.payment_proof_url ? 'Menunggu Verifikasi Bukti' : 'Belum Lunas'}
+                </strong></span>
               </div>
             </div>
           </div>

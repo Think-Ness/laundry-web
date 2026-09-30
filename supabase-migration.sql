@@ -45,6 +45,11 @@ CREATE TABLE IF NOT EXISTS public.orders (
 -- Idempotent column additions for existing tables
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS student_reg_number TEXT;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS service_type TEXT DEFAULT 'biasa';
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_proof_url TEXT;
+
+-- Update payment_method constraint to allow transfer
+ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS orders_payment_method_check;
+ALTER TABLE public.orders ADD CONSTRAINT orders_payment_method_check CHECK (payment_method IN ('cash', 'qris', 'transfer'));
 
 CREATE INDEX IF NOT EXISTS idx_orders_status           ON public.orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_submitted_at     ON public.orders(submitted_at DESC);

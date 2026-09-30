@@ -7,6 +7,7 @@ import { z } from 'zod'
 const schema = z.object({
   token: z.string().min(10),
   note: z.string().max(500).optional(),
+  payment_proof_url: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { token, note } = parsed.data
+    const { token, note, payment_proof_url } = parsed.data
 
     // 1. Decode payload
     const payload = decodeQrToken(token)
@@ -75,12 +76,15 @@ export async function POST(request: NextRequest) {
       unit_price:       payload.harga,
       total_amount:     payload.total,
       payment_method:   payload.bayar,
-      payment_status:   payload.lunas ? 'paid' : 'pending',
+      payment_status:   payload.lunas ? 'paid' : (payment_proof_url ? 'verification' : 'pending'),
       customer_note:    note || null,
       status:           'new',
       submitted_at:     new Date().toISOString(),
     }
 
+    if (payment_proof_url) {
+      orderData.payment_proof_url = payment_proof_url
+    }
     if (payload.nis) {
       orderData.student_reg_number = payload.nis
     }
@@ -95,9 +99,10 @@ export async function POST(request: NextRequest) {
       .single()
 
     // Graceful fallback if columns don't exist yet on remote Supabase
-    if (error && (error.message?.includes('student_reg_number') || error.message?.includes('service_type'))) {
+    if (error && (error.message?.includes('student_reg_number') || error.message?.includes('service_type') || error.message?.includes('payment_proof_url'))) {
       delete orderData.student_reg_number
       delete orderData.service_type
+      delete orderData.payment_proof_url
       const retry = await supabase
         .from('orders')
         .insert(orderData)
