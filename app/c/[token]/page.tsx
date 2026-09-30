@@ -1,21 +1,29 @@
 import { notFound } from 'next/navigation'
 import { decodeQrToken, verifyQrSignature, formatRupiah } from '@/lib/qr-verifier'
-import ConfirmationForm from './ConfirmationForm'
+import { createServiceClient } from '@/lib/supabase/server'
+import ConfirmationForm, { type OrderInfo } from './ConfirmationForm'
 import type { Metadata } from 'next'
 
 interface Props {
   params: Promise<{ token: string }>
 }
 
-export const metadata: Metadata = {
-  title: 'Konfirmasi Laundry — Latansa Laundry',
-  description: 'Konfirmasi pengiriman laundry ke bagian laundry pondok.',
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { token } = await params
+  const payload = decodeQrToken(token)
+  const title = payload?.id
+    ? `Pesanan ${payload.id} — Latansa Laundry`
+    : 'Konfirmasi Laundry — Latansa Laundry'
+  return {
+    title,
+    description: 'Konfirmasi dan pantau progres pengerjaan laundry santri.',
+  }
 }
 
 export default async function ConfirmationPage({ params }: Props) {
   const { token } = await params
 
-  // Decode and verify QR payload
+  // 1. Decode and verify QR payload
   const payload = decodeQrToken(token)
   if (!payload) notFound()
 
@@ -28,92 +36,215 @@ export default async function ConfirmationPage({ params }: Props) {
 
   if (!isValid) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-white rounded-2xl border border-red-200 p-6 text-center">
-          <div className="text-4xl mb-3">⚠️</div>
-          <h1 className="text-lg font-bold text-red-700 mb-2">QR Tidak Valid</h1>
-          <p className="text-sm text-gray-500">
-            QR Code ini tidak dapat diverifikasi. Pastikan Anda memindai QR dari nota yang benar.
+      <main style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(160deg, #0D1929 0%, #0F172A 60%, #111827 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        fontFamily: "'Inter', system-ui, sans-serif",
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '380px',
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(239,68,68,0.25)',
+          borderRadius: '16px',
+          padding: '28px 20px',
+          textAlign: 'center',
+          backdropFilter: 'blur(12px)',
+        }}>
+          <div style={{
+            width: '48px', height: '48px',
+            borderRadius: '12px',
+            background: 'rgba(239,68,68,0.15)',
+            color: '#F87171',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '14px',
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <h1 style={{ fontSize: '17px', fontWeight: 800, color: '#F87171', margin: '0 0 8px' }}>
+            QR Code Tidak Valid
+          </h1>
+          <p style={{ fontSize: '12.5px', color: '#94A3B8', margin: 0, lineHeight: 1.5 }}>
+            QR Code ini tidak dapat diverifikasi keasliannya. Pastikan Anda memindai QR langsung dari nota resmi.
           </p>
-          <p className="text-sm text-gray-400 mt-3">
-            Kode Transaksi: <strong className="font-mono">{payload.id}</strong>
-          </p>
+          <div style={{
+            marginTop: '16px',
+            padding: '8px 12px',
+            background: 'rgba(255,255,255,0.03)',
+            borderRadius: '8px',
+            fontSize: '11px',
+            color: '#64748B',
+            fontFamily: 'monospace',
+          }}>
+            ID: {payload.id}
+          </div>
         </div>
       </main>
     )
   }
 
+  // 2. Query Supabase to see if this order already exists
+  let existingOrder: OrderInfo | null = null
+  try {
+    const supabase = createServiceClient()
+    const { data } = await supabase
+      .from('orders')
+      .select('id, transaction_id, status, submitted_at, received_at, processing_at, completed_at, customer_note, created_at, updated_at')
+      .eq('transaction_id', payload.id)
+      .maybeSingle()
+
+    if (data) {
+      existingOrder = data as OrderInfo
+    }
+  } catch (err) {
+    console.error('Failed to check existing order in Supabase:', err)
+  }
+
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-start p-4 pt-8 pb-16">
-      {/* Header */}
-      <div className="w-full max-w-sm mb-4">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-2xl">🧺</span>
-          <span className="font-bold text-gray-800">Latansa Laundry</span>
+    <main style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(160deg, #0D1929 0%, #0F172A 60%, #111827 100%)',
+      fontFamily: "'Inter', system-ui, sans-serif",
+      color: '#F1F5F9',
+      paddingBottom: '48px',
+    }}>
+      {/* Top Header Bar */}
+      <div style={{
+        background: 'rgba(255,255,255,0.04)',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        padding: '14px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '32px', height: '32px',
+            background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
+            borderRadius: '9px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff',
+            boxShadow: '0 4px 12px rgba(59,130,246,0.35)',
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="4"/>
+              <circle cx="12" cy="13" r="4"/>
+              <path d="M6 6h.01M9 6h3"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#F1F5F9' }}>Latansa Laundry</div>
+            <div style={{ fontSize: '10px', color: '#64748B' }}>
+              {existingOrder ? 'Progres Status Laundry' : 'Konfirmasi Penerimaan Laundry'}
+            </div>
+          </div>
         </div>
-        <h1 className="text-xl font-bold text-gray-900">Konfirmasi Laundry</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Periksa data berikut, tambahkan catatan jika perlu, lalu kirim ke bagian Laundry.
-        </p>
+
+        <span style={{
+          fontSize: '11px',
+          fontWeight: 700,
+          padding: '4px 10px',
+          borderRadius: '999px',
+          background: existingOrder ? 'rgba(34,197,94,0.15)' : 'rgba(234,179,8,0.15)',
+          color: existingOrder ? '#4ADE80' : '#FDE047',
+          border: existingOrder ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(234,179,8,0.3)',
+        }}>
+          {existingOrder ? 'Sudah Disubmit' : 'Siap Kirim'}
+        </span>
       </div>
 
-      {/* Data Card */}
-      <div className="w-full max-w-sm bg-white rounded-2xl border border-gray-200 p-5 mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">No. Transaksi</span>
-          <span className="font-mono text-sm font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded">
+      <div style={{ maxWidth: '440px', margin: '0 auto', padding: '24px 16px 0' }}>
+
+        {/* Transaction Header */}
+        <div style={{ marginBottom: '18px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748B', letterSpacing: '0.06em', marginBottom: '4px' }}>
+            NO. TRANSAKSI
+          </div>
+          <div style={{ fontSize: '20px', fontWeight: 800, color: '#F8FAFC', fontFamily: 'monospace', letterSpacing: '0.02em' }}>
             {payload.id}
-          </span>
+          </div>
         </div>
 
-        <div className="space-y-3">
-          <DataRow label="Nama Wali Santri" value={payload.wali} />
-          <DataRow label="Nama Santri" value={payload.santri} />
-          {payload.nis && <DataRow label="No. Reg / NIS Santri" value={payload.nis} />}
-          {payload.hp && <DataRow label="No. HP" value={payload.hp} />}
-
-          <hr className="border-gray-100" />
-
-          {payload.layanan && (
-            <DataRow
-              label="Tipe Layanan"
-              value={payload.layanan.toUpperCase()}
-            />
-          )}
-          <DataRow label="Berat Laundry" value={`${payload.kg.toFixed(1)} Kg`} />
-          <DataRow label="Harga / Kg" value={formatRupiah(payload.harga)} />
-
-          <div className="flex justify-between items-center bg-gray-50 rounded-xl px-3 py-2.5">
-            <span className="text-sm font-bold text-gray-700">Total</span>
-            <span className="text-lg font-bold text-blue-700">{formatRupiah(payload.total)}</span>
+        {/* Data Card */}
+        <div style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '16px',
+          padding: '20px',
+          marginBottom: '16px',
+          backdropFilter: 'blur(12px)',
+        }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', letterSpacing: '0.06em', marginBottom: '12px' }}>
+            RINCIAN PESANAN
           </div>
 
-          <DataRow
-            label="Metode Pembayaran"
-            value={payload.bayar === 'qris' ? 'QRIS' : 'Cash'}
-          />
-          <DataRow
-            label="Status"
-            value={payload.lunas ? '✅ Lunas' : '⚠️ Belum Lunas'}
-          />
+          <div style={{ display: 'grid', gap: '10px' }}>
+            <DataRow label="Nama Santri" value={payload.santri} bold />
+            <DataRow label="Nama Wali" value={payload.wali} />
+            {payload.nis && <DataRow label="NIS / No. Reg" value={payload.nis} mono />}
+            {payload.hp && <DataRow label="No. HP" value={payload.hp} />}
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '10px', marginTop: '2px', display: 'grid', gap: '8px' }}>
+              {payload.layanan && (
+                <DataRow label="Tipe Layanan" value={payload.layanan.toUpperCase()} />
+              )}
+              <DataRow label="Berat Cucian" value={`${payload.kg.toFixed(1)} Kg`} />
+              <DataRow label="Tarif / Kg" value={formatRupiah(payload.harga)} />
+
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: 'rgba(59,130,246,0.08)',
+                border: '1px solid rgba(59,130,246,0.18)',
+                borderRadius: '10px',
+                padding: '10px 12px',
+                marginTop: '4px',
+              }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#93C5FD' }}>Total Bayar</span>
+                <span style={{ fontSize: '16px', fontWeight: 800, color: '#60A5FA' }}>{formatRupiah(payload.total)}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
+                <span>Metode: <strong style={{ color: '#E2E8F0' }}>{payload.bayar === 'qris' ? 'QRIS' : 'Cash'}</strong></span>
+                <span>Status: <strong style={{ color: payload.lunas ? '#4ADE80' : '#FDE047' }}>{payload.lunas ? 'Lunas' : 'Belum Lunas'}</strong></span>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Confirmation Form or Progress Stepper */}
+        <ConfirmationForm
+          payload={payload}
+          token={token}
+          initialOrder={existingOrder}
+        />
       </div>
-
-      {/* Confirmation Form (Client Component) */}
-      <ConfirmationForm payload={payload} token={token} />
-
-      <p className="text-xs text-gray-400 text-center mt-4 max-w-sm px-2">
-        Data akan langsung diteruskan ke sistem laundry pondok setelah Anda menekan tombol kirim.
-      </p>
     </main>
   )
 }
 
-function DataRow({ label, value }: { label: string; value: string }) {
+function DataRow({ label, value, bold, mono }: { label: string; value: string; bold?: boolean; mono?: boolean }) {
   return (
-    <div className="flex justify-between items-start gap-2">
-      <span className="text-sm text-gray-500 shrink-0">{label}</span>
-      <span className="text-sm font-medium text-gray-800 text-right">{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+      <span style={{ fontSize: '12.5px', color: '#94A3B8', flexShrink: 0 }}>{label}</span>
+      <span style={{
+        fontSize: '13px',
+        fontWeight: bold ? 700 : 500,
+        color: bold ? '#F8FAFC' : '#CBD5E1',
+        textAlign: 'right',
+        fontFamily: mono ? 'monospace' : 'inherit',
+      }}>
+        {value}
+      </span>
     </div>
   )
 }
