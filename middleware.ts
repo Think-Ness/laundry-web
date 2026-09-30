@@ -36,8 +36,8 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     const pathname = url.pathname
 
-    // Public routes: QR confirmation page and auth pages
-    const publicRoutes = ['/c/', '/auth/', '/api/']
+    // Public routes: QR confirmation page, order tracking, and auth pages
+    const publicRoutes = ['/c/', '/track/', '/auth/', '/api/']
     const isPublic = publicRoutes.some(p => pathname.startsWith(p)) || pathname === '/'
 
     // Dashboard routes require auth

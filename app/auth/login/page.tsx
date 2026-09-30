@@ -79,8 +79,9 @@ export default async function LoginPage({
             boxShadow: '0 8px 24px rgba(59,130,246,0.35)',
           }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="5"/>
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              <rect x="2" y="2" width="20" height="20" rx="4"/>
+              <circle cx="12" cy="13" r="4"/>
+              <path d="M6 6h.01M9 6h3"/>
             </svg>
           </div>
           <h1 style={{

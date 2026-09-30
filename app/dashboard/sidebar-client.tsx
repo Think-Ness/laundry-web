@@ -57,9 +57,9 @@ const navItems = [
 function LogoIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="5"/>
-      <path d="M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93"/>
-      <circle cx="12" cy="12" r="10"/>
+      <rect x="2" y="2" width="20" height="20" rx="4"/>
+      <circle cx="12" cy="13" r="4"/>
+      <path d="M6 6h.01M9 6h3"/>
     </svg>
   )
 }

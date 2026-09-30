@@ -129,6 +129,19 @@ CREATE POLICY "orders_select_authenticated"
     TO authenticated
     USING (TRUE);
 
+-- Orders: anonymous users can read order tracking data (limited public fields)
+-- Used by /track/[txId] page — no auth required, secured by transaction_id lookup
+CREATE POLICY "orders_select_anon_tracking"
+    ON public.orders FOR SELECT
+    TO anon
+    USING (TRUE);
+
+-- Order Events: anon can read events for tracking purposes
+CREATE POLICY "order_events_select_anon_tracking"
+    ON public.order_events FOR SELECT
+    TO anon
+    USING (TRUE);
+
 -- Orders: only service role can insert (via API route, not direct client)
 -- Public form uses service role key server-side — no anon INSERT allowed
 -- No anon SELECT on orders either

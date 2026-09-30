@@ -27,19 +27,66 @@ export default async function OrderDetailPage({ params }: Props) {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-3">
-          ← Kembali ke Dashboard
+      <div style={{ marginBottom: '20px' }}>
+        <Link
+          href="/pesanan"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#64748B', textDecoration: 'none', marginBottom: '8px' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Semua Pesanan
         </Link>
-        <div className="flex items-start justify-between">
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 font-mono">{order.transaction_id}</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <h1 style={{ fontFamily: 'monospace', fontSize: '20px', fontWeight: 800, color: '#0F172A', margin: 0 }}>{order.transaction_id}</h1>
+            <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '3px' }}>
               Dikirim: {order.submitted_at ? new Date(order.submitted_at).toLocaleString('id-ID') : '—'}
             </p>
           </div>
-          <StatusBadge status={order.status} large />
+          <StatusBadge status={order.status as OrderStatus} large />
         </div>
+      </div>
+
+      {/* Tracking Link Banner */}
+      <div style={{
+        background: 'linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 100%)',
+        border: '1px solid #BFDBFE',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        marginBottom: '20px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ background: '#DBEAFE', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#1E40AF' }}>Link Tracking Status Laundry</div>
+            <div style={{ fontSize: '11px', color: '#3B82F6', fontFamily: 'monospace', marginTop: '1px' }}>
+              /track/{order.transaction_id}
+            </div>
+          </div>
+        </div>
+        <Link
+          href={`/track/${order.transaction_id}`}
+          target="_blank"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '5px',
+            background: '#2563EB', color: '#fff',
+            padding: '6px 14px', borderRadius: '8px',
+            fontSize: '12px', fontWeight: 600, textDecoration: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          Lihat Tracking
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
