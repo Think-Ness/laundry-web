@@ -107,11 +107,11 @@ export async function POST(request: NextRequest) {
       error = retry.error
     }
 
-    if (error) {
+    if (error || !order) {
       console.error('[confirm] Supabase insert error:', error)
 
       // Handle unique constraint violation (race condition duplicate)
-      if (error.code === '23505') {
+      if (error?.code === '23505') {
         return NextResponse.json(
           { message: 'Sudah dikirim sebelumnya.' },
           { status: 409 }
