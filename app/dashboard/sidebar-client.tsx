@@ -164,35 +164,38 @@ function SidebarContent({ userEmail, onLinkClick, onOpenScanner }: { userEmail: 
               justifyContent: 'space-between',
               padding: '10px 12px',
               borderRadius: '9px',
-              border: '1.5px dashed rgba(59,130,246,0.5)',
-              background: 'rgba(37,99,235,0.15)',
-              color: '#93C5FD',
+              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(255,255,255,0.05)',
+              color: '#F1F5F9',
               cursor: 'pointer',
               marginBottom: '14px',
               fontSize: '13px',
-              fontWeight: 700,
+              fontWeight: 600,
               transition: 'all 0.15s ease',
             }}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(37,99,235,0.25)'
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.09)'
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(37,99,235,0.15)'
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'
             }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ScannerIcon />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+              <span style={{ color: '#60A5FA', display: 'flex', alignItems: 'center' }}>
+                <ScannerIcon />
+              </span>
               Scan Masuk
             </span>
             <kbd
               style={{
-                background: '#2563EB',
-                color: '#fff',
+                background: 'rgba(255,255,255,0.1)',
+                color: '#94A3B8',
                 fontSize: '11px',
                 padding: '2px 6px',
                 borderRadius: '4px',
                 fontFamily: 'monospace',
                 fontWeight: 700,
+                border: '1px solid rgba(255,255,255,0.08)',
               }}
             >
               S

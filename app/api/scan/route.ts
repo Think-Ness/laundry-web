@@ -125,6 +125,35 @@ export async function POST(request: NextRequest) {
       }, { status: 404 })
     }
 
+    // Double scan protection: if order is already at targetStatus
+    if (order.status === targetStatus) {
+      const statusLabels: Record<string, string> = {
+        received: 'Diterima di Ruang Laundry',
+        processing: 'Sedang Dicuci (Diproses)',
+        ready: 'Siap Diambil Stand',
+      }
+      return NextResponse.json({
+        success: true,
+        already_processed: true,
+        message: `Buntelan santri ${order.student_name} SUDAH berstatus ${statusLabels[targetStatus] || targetStatus}. Tidak ada perubahan progres ganda.`,
+        action_desc: statusLabels[targetStatus] || targetStatus,
+        previous_status: order.status,
+        new_status: order.status,
+        order: {
+          id: order.id,
+          transaction_id: order.transaction_id,
+          student_name: order.student_name,
+          customer_name: order.customer_name,
+          student_reg_number: order.student_reg_number,
+          service_type: order.service_type,
+          weight: order.weight,
+          total_amount: order.total_amount,
+          status: order.status,
+          payment_status: order.payment_status,
+        },
+      }, { status: 200 })
+    }
+
     // 6. Update order status
     const previousStatus = order.status
     const nowIso = new Date().toISOString()
